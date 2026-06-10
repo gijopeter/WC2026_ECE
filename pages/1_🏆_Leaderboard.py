@@ -1,19 +1,22 @@
-import sys
 import os
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-
+import pandas as pd
 import streamlit as st
 
-from modules.database import (
-    init_db,
-    calculate_leaderboard,
-    calculate_poll_scores,
-    calculate_cumulative_trend
-)
-
-init_db()
+SNAPSHOT_FILE = "data/leaderboard_snapshot.xlsx"
 
 st.title("🏆 World Cup Predictions Leaderboard - Global ECE")
+
+if not os.path.exists(SNAPSHOT_FILE):
+    st.info("Leaderboard snapshot not available yet.")
+    st.stop()
+
+leaderboard = pd.read_excel(SNAPSHOT_FILE, sheet_name="Leaderboard")
+poll_scores = pd.read_excel(SNAPSHOT_FILE, sheet_name="PollScores")
+
+try:
+    trend_df = pd.read_excel(SNAPSHOT_FILE, sheet_name="Trend")
+except Exception:
+    trend_df = pd.DataFrame()
 
 tab1, tab2, tab3 = st.tabs([
     "🏆 Overall Leaderboard",
@@ -22,22 +25,20 @@ tab1, tab2, tab3 = st.tabs([
 ])
 
 with tab1:
-    df = calculate_leaderboard()
-
-    if df.empty:
+    if leaderboard.empty:
         st.info("No results yet.")
     else:
-        if "total_points" in df.columns:
+        if "total_points" in leaderboard.columns:
             points_col = "total_points"
-        elif "score" in df.columns:
+        elif "score" in leaderboard.columns:
             points_col = "score"
-        elif "points" in df.columns:
+        elif "points" in leaderboard.columns:
             points_col = "points"
         else:
-            st.error(f"No points column found. Available columns: {list(df.columns)}")
+            st.error(f"No points column found. Available columns: {list(leaderboard.columns)}")
             st.stop()
 
-        df_sorted = df.sort_values(points_col, ascending=False).reset_index(drop=True)
+        df_sorted = leaderboard.sort_values(points_col, ascending=False).reset_index(drop=True)
         df_sorted.index = df_sorted.index + 1
         df_sorted.index.name = "Rank"
 
@@ -52,8 +53,6 @@ with tab1:
         st.dataframe(df_display, use_container_width=True)
 
 with tab2:
-    poll_scores = calculate_poll_scores()
-
     if poll_scores.empty:
         st.info("No poll-wise scores yet.")
     else:
@@ -83,8 +82,6 @@ with tab2:
         )
 
 with tab3:
-    trend_df = calculate_cumulative_trend(last_n_polls=5, top_n_players=7)
-
     if trend_df.empty:
         st.info("No trend data yet.")
     else:
@@ -92,7 +89,7 @@ with tab3:
             index="poll_no",
             columns="player",
             values="cumulative_score"
-        ).fillna(method="ffill").fillna(0)
+        ).ffill().fillna(0)
 
         st.subheader("Top 7 Players - Trend Over Last 5 Polls")
         st.line_chart(chart_df)
