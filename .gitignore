@@ -1,11 +1,9 @@
-# Ignore everything under modules
-modules/
-
 # Ignore admin pages
 pages/2_*.py
 
 # Ignore database
 *.db
+*.pyc
 
 # Ignore migration files
 donot_run_import_group_stage_games.py
