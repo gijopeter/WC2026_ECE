@@ -1,8 +1,6 @@
 # Ignore admin pages
-pages/2_*.py
 
 # Ignore database
-*.db
 *.pyc
 
 # Ignore migration files
@@ -10,8 +8,3 @@ donot_run_import_group_stage_games.py
 donot_run_migrate_results_multi.py
 
 # Keep public files
-!app.py
-!pages/1_🏆_Leaderboard.py
-!pages/3_📋_Groups.py
-!data/
-!data/leaderboard_snapshot.xlsx
