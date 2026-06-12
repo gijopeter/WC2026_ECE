@@ -228,5 +228,8 @@ def manage_selections():
     st.divider()
 
     if st.button("⬅ Back"):
-        st.session_state.admin_page = "polls"
-        st.rerun()
+        if "admin_authenticated" in st.session_state:
+            st.session_state.admin_page = "polls"
+            st.rerun()
+        else:
+            st.info("You are already on the volunteer entry page.")
