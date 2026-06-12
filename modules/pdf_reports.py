@@ -1,14 +1,21 @@
 import os
 import tempfile
 import streamlit as st
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
-from reportlab.lib.pagesizes import A4
+from reportlab.platypus import (
+    SimpleDocTemplate,
+    Paragraph,
+    Spacer,
+    Table,
+    TableStyle,
+    PageBreak,
+)
+from reportlab.lib.pagesizes import A4, landscape
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet
 
 from .database import (
     calculate_leaderboard,
-    calculate_poll_scores
+    calculate_poll_scores,
 )
 
 
@@ -21,8 +28,8 @@ def generate_pdf_reports():
         [
             "Summary only",
             "Summary + Poll scores",
-            "Full detail"
-        ]
+            "Full detail",
+        ],
     )
 
     if st.button("Generate PDF"):
@@ -34,7 +41,7 @@ def generate_pdf_reports():
                 label="⬇️ Download PDF Report",
                 data=f,
                 file_name="worldcup_prediction_report.pdf",
-                mime="application/pdf"
+                mime="application/pdf",
             )
 
     st.divider()
@@ -49,13 +56,22 @@ def create_pdf_report(granularity):
     tmp_dir = tempfile.gettempdir()
     pdf_path = os.path.join(tmp_dir, "worldcup_prediction_report.pdf")
 
-    doc = SimpleDocTemplate(pdf_path, pagesize=A4)
+    doc = SimpleDocTemplate(
+        pdf_path,
+        pagesize=landscape(A4),
+        rightMargin=24,
+        leftMargin=24,
+        topMargin=24,
+        bottomMargin=24,
+    )
+
     styles = getSampleStyleSheet()
     elements = []
 
     elements.append(Paragraph("World Cup Prediction Report", styles["Title"]))
     elements.append(Spacer(1, 16))
 
+    # ---------------- Overall Leaderboard ----------------
     leaderboard = calculate_leaderboard()
 
     elements.append(Paragraph("Overall Leaderboard", styles["Heading2"]))
@@ -65,7 +81,10 @@ def create_pdf_report(granularity):
     else:
         points_col = _detect_points_column(leaderboard)
 
-        leaderboard = leaderboard.sort_values(points_col, ascending=False).reset_index(drop=True)
+        leaderboard = leaderboard.sort_values(
+            points_col,
+            ascending=False,
+        ).reset_index(drop=True)
 
         data = [["Rank", "Player", "Points"]]
 
@@ -76,9 +95,10 @@ def create_pdf_report(granularity):
 
         elements.append(_make_table(data))
 
+    # ---------------- Poll-wise Scores ----------------
     if granularity in ["Summary + Poll scores", "Full detail"]:
 
-        elements.append(Spacer(1, 20))
+        elements.append(PageBreak())
         elements.append(Paragraph("Poll-wise Scores", styles["Heading2"]))
 
         poll_scores = calculate_poll_scores()
@@ -88,12 +108,19 @@ def create_pdf_report(granularity):
         else:
             for poll_no in sorted(poll_scores["poll_no"].dropna().unique()):
 
-                poll_df = poll_scores[poll_scores["poll_no"] == poll_no]
+                poll_df = poll_scores[poll_scores["poll_no"] == poll_no].copy()
 
                 question = poll_df["question_text"].iloc[0]
 
                 elements.append(Spacer(1, 12))
-                elements.append(Paragraph(f"Poll {poll_no}: {question}", styles["Heading3"]))
+                elements.append(
+                    Paragraph(
+                        f"Poll {poll_no}: {question}",
+                        styles["Heading3"],
+                    )
+                )
+
+                poll_df = poll_df.sort_values("score", ascending=False)
 
                 if granularity == "Summary + Poll scores":
                     data = [["Player", "Score"]]
@@ -101,7 +128,7 @@ def create_pdf_report(granularity):
                     for _, row in poll_df.iterrows():
                         data.append([
                             row["player"],
-                            row["score"]
+                            row["score"],
                         ])
 
                 else:
@@ -111,7 +138,7 @@ def create_pdf_report(granularity):
                         data.append([
                             row["player"],
                             row["selected_option"],
-                            row["score"]
+                            row["score"],
                         ])
 
                 elements.append(_make_table(data))
@@ -126,7 +153,9 @@ def _detect_points_column(df):
         if col in df.columns:
             return col
 
-    raise ValueError(f"No points column found. Available columns: {list(df.columns)}")
+    raise ValueError(
+        f"No points column found. Available columns: {list(df.columns)}"
+    )
 
 
 def _make_table(data):

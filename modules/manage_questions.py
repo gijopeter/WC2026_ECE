@@ -87,6 +87,13 @@ def manage_questions():
 
     question_text = st.text_input("Question Text", key="question_text_input")
 
+    selection_type = st.radio(
+        "Selection Type",
+        ["single", "multi"],
+        horizontal=True,
+        help="single = one option per player, multi = multiple options per player"
+    )    
+
     if st.button("Add Question"):
 
         if not question_text.strip():
@@ -117,7 +124,8 @@ def manage_questions():
                 add_question(
                     selected_game_id,
                     final_question_text,
-                    int(poll_no)
+                    int(poll_no),
+                    selection_type
                 )
 
                 st.success(f"✅ Poll {poll_no} added successfully")
@@ -130,10 +138,17 @@ def manage_questions():
     if not questions.empty:
         st.subheader("🗑 Delete Poll Question")
 
+        if "selection_type" not in questions.columns:
+            questions["selection_type"] = "single"
+
+        questions["selection_type"] = questions["selection_type"].fillna("single")
+
         questions["display"] = (
             questions["question_text"] +
             " [Poll " +
             questions["poll_no"].astype(str) +
+            ", " +
+            questions["selection_type"].str.upper() +
             "]"
         )
 

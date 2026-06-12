@@ -61,12 +61,14 @@ def init_db():
     )
     """)
 
+
     # Add group_name column if missing
     c.execute("PRAGMA table_info(games)")
     columns = [col[1] for col in c.fetchall()]
 
     if "group_name" not in columns:
         c.execute("ALTER TABLE games ADD COLUMN group_name TEXT")
+
 
     # Add points_incorrect column if missing
     c.execute("PRAGMA table_info(options)")
@@ -75,7 +77,16 @@ def init_db():
     if "points_incorrect" not in columns:
         c.execute(
             "ALTER TABLE options ADD COLUMN points_incorrect INTEGER DEFAULT 0"
-        )            
+        ) 
+
+
+    c.execute("PRAGMA table_info(questions)")
+    columns = [col[1] for col in c.fetchall()]
+
+    if "selection_type" not in columns:
+        c.execute(
+            "ALTER TABLE questions ADD COLUMN selection_type TEXT DEFAULT 'single'"
+        )        
 
     conn.commit()
     conn.close()
@@ -114,12 +125,16 @@ def get_games():
     return df
 
 
-def add_question(game_id, question_text, poll_no):
+def add_question(game_id, question_text, poll_no, selection_type="single"):
     conn = get_connection()
     cur = conn.cursor()
     cur.execute(
-        "INSERT INTO questions (poll_no, game_id, question_text) VALUES (?, ?, ?)",
-        (poll_no, game_id, question_text)
+        """
+        INSERT INTO questions 
+        (poll_no, game_id, question_text, selection_type)
+        VALUES (?, ?, ?, ?)
+        """,
+        (poll_no, game_id, question_text, selection_type)
     )
     conn.commit()
     conn.close()
@@ -169,6 +184,33 @@ def save_selection(player_id, question_id, option_id):
 
     conn.commit()
     conn.close()
+
+def delete_player_selection_for_question(player_id, question_id):
+    conn = get_connection()
+    conn.execute(
+        """
+        DELETE FROM selections
+        WHERE player_id = ? AND question_id = ?
+        """,
+        (player_id, question_id)
+    )
+    conn.commit()
+    conn.close()
+
+
+def add_selection_without_delete(player_id, question_id, option_id):
+    conn = get_connection()
+
+    conn.execute(
+        """
+        INSERT INTO selections (player_id, question_id, option_id)
+        VALUES (?, ?, ?)
+        """,
+        (player_id, question_id, option_id)
+    )
+
+    conn.commit()
+    conn.close()    
 
 
 def save_results_for_question(question_id, correct_option_ids):
