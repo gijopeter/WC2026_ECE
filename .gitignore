@@ -1,4 +1,6 @@
 # Ignore admin pages
+pages/
+modules/
 
 # Ignore database
 *.pyc
@@ -8,3 +10,6 @@ donot_run_import_group_stage_games.py
 donot_run_migrate_results_multi.py
 
 # Keep public files
+!pages/1_🏆_Leaderboard.py
+!pages/4_📝_Volunteer_Entry.py
+!modules/selections.py
