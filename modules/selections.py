@@ -8,9 +8,10 @@ from .database import (
     delete_selections_for_question,
     add_selection_without_delete,
 )
+from .database import log_volunteer_update
 
 
-def manage_selections():
+def manage_selections(volunteer_username=None, show_back_button=True):
 
     st.header("🗳 Enter Player Selections")
 
@@ -190,6 +191,13 @@ def manage_selections():
                     save_selection(player_id, q_id, option_id)
 
         st.success("✅ Existing selections replaced successfully")
+        selected_poll_name = filtered_questions.loc[
+            filtered_questions["id"] == q_id,
+            "display"
+        ].values[0]
+
+        if volunteer_username:
+            log_volunteer_update(volunteer_username, selected_poll_name)        
         st.rerun()
 
     st.divider()
@@ -227,9 +235,7 @@ def manage_selections():
 
     st.divider()
 
-    if st.button("⬅ Back"):
-        if "admin_authenticated" in st.session_state:
+    if show_back_button:
+        if st.button("⬅ Back"):
             st.session_state.admin_page = "polls"
             st.rerun()
-        else:
-            st.info("You are already on the volunteer entry page.")

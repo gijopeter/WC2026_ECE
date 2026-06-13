@@ -1,7 +1,18 @@
 import sqlite3
 import pandas as pd
+import os
 
 DB_NAME = "worldcup.db"
+
+from datetime import datetime
+
+def log_volunteer_update(username, poll_name):
+    os.makedirs("logs", exist_ok=True)
+
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    with open("logs/volunteer_updates.log", "a", encoding="utf-8") as f:
+        f.write(f"{timestamp} | {username} | saved selections for: {poll_name}\n")
 
 
 def get_connection():

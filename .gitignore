@@ -73,6 +73,7 @@ modules/*
 # Keep only required modules
 !modules/database.py
 !modules/selections.py
+!modules/volunteer_auth.py
 
 # ==========================================================
 # Excel exports
