@@ -58,7 +58,7 @@ donot_run_migrate_results_multi.py
 # ==========================================================
 # Ignore all pages by default
 # ==========================================================
-pages/*
+#pages/*
 
 # Keep public pages
 !pages/1_🏆_Leaderboard.py
@@ -68,7 +68,7 @@ pages/*
 # ==========================================================
 # Ignore all modules by default
 # ==========================================================
-modules/*
+#modules/*
 
 # Keep only required modules
 !modules/database.py
