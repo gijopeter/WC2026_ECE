@@ -3,7 +3,7 @@ import hashlib
 
 VOLUNTEERS = {
     "Sooraj": hashlib.sha256("SoorajA2D".encode()).hexdigest(),
-    "volunteer2": hashlib.sha256("pass456".encode()).hexdigest(),
+    "Gijo": hashlib.sha256("GijoAll".encode()).hexdigest(),
 }
 
 
